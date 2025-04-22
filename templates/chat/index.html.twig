@@ -1,0 +1,39 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Czat{% endblock %}
+
+{% block body %}
+    <h1>Czat</h1>
+    <div id="chat-box" style="height: 400px; overflow-y: scroll; border: 1px solid #ccc; padding: 10px;"></div>
+    <input type="text" id="message" placeholder="Wpisz wiadomość" style="width: 80%;">
+    <button onclick="sendMessage()">Wyślij</button>
+
+    <script>
+        const ws = new WebSocket('ws://localhost:8080');
+        const username = '{{ app.user.username }}';
+
+        ws.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            const chatBox = document.getElementById('chat-box');
+            chatBox.innerHTML += `<p><strong>${data.username}</strong> (${data.created_at}): ${data.content}</p>`;
+            chatBox.scrollTop = chatBox.scrollHeight;
+        };
+
+        function sendMessage() {
+            const message = document.getElementById('message').value;
+            if (message) {
+                ws.send(JSON.stringify({
+                    username: username,
+                    content: message
+                }));
+                document.getElementById('message').value = '';
+            }
+        }
+
+        document.getElementById('message').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    </script>
+{% endblock %}
